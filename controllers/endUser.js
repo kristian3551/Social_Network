@@ -1,4 +1,4 @@
-const { User } = require('../db');
+const { User, Friendship } = require('../db');
 
 const bcrypt = require('bcrypt');
 const { saltRounds } = require('../config');
@@ -26,10 +26,20 @@ module.exports = {
 
             User.findOne({ where: { id } })
                 .then(data => {
-                    res.status(200).json(data.toJSON());
+                    const user = data.toJSON();
+
+                    return Promise.all([
+                        Friendship.findAll({ 
+                            attributes: ['friend_username'], 
+                            where: { username: user.username } 
+                        }),
+                        user
+                    ]);
                 })
-                .catch(err => {
-                    res.status(500).send(err);
+                .then(([data, user]) => {
+                    data = data.map(el => el.toJSON().friend_username);
+                    user.list_of_friends = data;
+                    res.status(200).json(user);
                 });
         }
     },
@@ -45,7 +55,6 @@ module.exports = {
                             status: 404,
                             message: USER_NOT_FOUND
                         }
-
                     if(data.toJSON().role == 0)
                         throw {
                             status: 401,
@@ -63,23 +72,40 @@ module.exports = {
 
                     const user = data.toJSON();
 
-                    if(user.list_of_friends.length >= MAX_FRIENDS_COUNT)
-                        throw {
-                            status: 404,
-                            message: FRIENDS_LIMIT_REACHED
-                        }
-
-                    if(user.list_of_friends.includes(friendUsername))
+                    return Promise.all([
+                        Friendship.findOne({ 
+                            where: { 
+                                username: user.username, 
+                                friend_username: friendUsername 
+                            }
+                        }),
+                        user
+                    ]);
+                })
+                .then(([data, user]) => {
+                    if(data)
                         throw {
                             status: 422,
                             message: ALREADY_FRIENDS
                         }
+                    
+                    return Promise.all([
+                        Friendship.findAll({ 
+                            where: { 
+                                username: user.username 
+                            }
+                        }),
+                        user
+                    ]);
+                })
+                .then(([data, user]) => {
+                    if(data.length >= MAX_FRIENDS_COUNT)
+                        throw {
+                            status: 422,
+                            message: FRIENDS_LIMIT_REACHED
+                        }
 
-                    user.list_of_friends.push(friendUsername);
-
-                    return User.update({ 
-                        list_of_friends: user.list_of_friends
-                    }, { where: { id } });
+                    return Friendship.create({ username: user.username, friend_username: friendUsername });
                 })
                 .then(() => {
                     res.status(200).json({
@@ -193,17 +219,28 @@ module.exports = {
 
                     const user = data.toJSON();
 
-                    if(!user.list_of_friends.includes(friendUsername))
+                    return Promise.all([
+                        Friendship.findOne({ 
+                            where: { 
+                                username: user.username, 
+                                friend_username: friendUsername 
+                            }
+                        }),
+                        user
+                    ]);
+                })
+                .then(([data, user]) => {
+                    if(!data)
                         throw {
-                            status: 422,
                             message: USERS_NOT_FRIENDS
                         }
 
-                    user.list_of_friends = user.list_of_friends.filter(friend => friend != friendUsername);
-
-                    return User.update({ 
-                        list_of_friends: user.list_of_friends
-                    }, { where: { id } });
+                    return Friendship.destroy({
+                        where: {
+                            username: user.username,
+                            friend_username: friendUsername
+                        }
+                    });
                 })
                 .then(() => {
                     res.status(200).json({

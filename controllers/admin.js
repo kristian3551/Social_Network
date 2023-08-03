@@ -1,4 +1,5 @@
-const { User } = require('../db');
+const { User, Friendship } = require('../db');
+const { Op } = require("sequelize");
 
 const { PAGE_NOT_PASSED,
     USER_CREATED,
@@ -29,6 +30,27 @@ module.exports = {
             })
                 .then(data => {
                     const users = data.map(rawUser => rawUser.toJSON());
+                    const listOfUsernames = users.map(user => user.username);
+
+                    return Promise.all([
+                        Friendship.findAll({
+                            where: {
+                                username: {
+                                    [Op.in]: listOfUsernames
+                                }
+                            }
+                        }),
+                        users
+                    ]);
+                })
+                .then(([friendships, users]) => {
+                       friendships = friendships.map(friendship => friendship.toJSON());
+
+                    users.forEach(user => {
+                        user.list_of_friends = friendships.filter(friendship => friendship.username == user.username)
+                            .map(friendship => friendship.friend_username);
+                    });
+
                     res.status(200).json(users);
                 })
                 .catch(err => {
@@ -103,43 +125,37 @@ module.exports = {
         }
     },
     delete: {
-        user: async (req, res) => {
+        user: (req, res) => {
             const { id } = req.params;
-
-            Promise.all([
-                User.findAll(),
-                User.findOne({ where: { id } })
-            ])
-                .then(async ([data, userToBeDeleted]) => {
-                    userToBeDeleted = userToBeDeleted.toJSON();
-
-                    data.forEach(async (rawUser) => {
-                        const user = rawUser.toJSON();
-
-                        if(user.list_of_friends.includes(userToBeDeleted.username)) {
-                            user.list_of_friends = user.list_of_friends
-                                .filter(el => el != userToBeDeleted.username);
-
-                            await User.update({
-                                list_of_friends: user.list_of_friends
-                            }, { where: { id: user.id } });
-                        }
-                    });
-
-                    return User.destroy({ where: { id } });
-                })
+            
+            User.findOne({ where: { id } })
                 .then(data => {
-                    if(!data) throw {
+                    if(!data)
+                        throw {
+                            status: 404,
                             message: USER_NOT_FOUND
                         }
 
+                    const user = data.toJSON();
+
+                    return Promise.all([
+                        User.destroy({ where: { id } }),
+                        Friendship.destroy({ where: {
+                            [Op.or]: [
+                                { username: user.username },
+                                { friend_username: user.username }
+                            ]
+                        }})
+                    ]);
+                })
+                .then(() => {
                     res.status(200).json({
                         message: USER_DELETED
                     });
                 })
                 .catch(err => {
-                    res.status(500).send(err);
-                });
+                    res.status(err.status || 500).send(err);
+                })
         }
     }
 }
