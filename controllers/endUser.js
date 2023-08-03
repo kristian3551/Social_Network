@@ -122,7 +122,7 @@ module.exports = {
             const id = req.userId;
             const { username } = req.body;
 
-            User.update({ username }, { where: { id } })
+            User.findOne({ where: { id } })
                 .then(data => {
                     if(!data)
                         throw {
@@ -130,6 +130,15 @@ module.exports = {
                             message: USER_NOT_FOUND
                         }
 
+                    const user = data.toJSON();
+
+                    return Promise.all([
+                        User.update({ username }, { where: { id } }),
+                        Friendship.update({ username }, { where: { username: user.username } }),
+                        Friendship.update({ friend_username: username }, { where: { friend_username: user.username }})
+                    ]);
+                })
+                .then(() => {
                     res.status(200).json({
                         message: USERNAME_UPDATED
                     });
