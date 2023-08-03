@@ -16,7 +16,7 @@ module.exports = (req, res, next) => {
             if(blacklistToken)
                 throw "Used token"
 
-            req.user_id = data.id;
+            req.userId = data.id;
             next();
         })
         .catch(err => {

@@ -4,7 +4,7 @@ const {
 } = require('../utils/messages');
 
 module.exports = (req, res, next) => {
-    const id = req.user_id;
+    const id = req.userId;
 
     User.findOne({ where: { id }})
         .then(data => {
