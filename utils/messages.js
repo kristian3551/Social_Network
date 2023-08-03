@@ -16,6 +16,7 @@ const USERNAME_UPDATED = 'Successfully updated username!';
 const EMAIL_UPDATED = 'Successfully updated email!';
 const USERS_NOT_FRIENDS = 'Users are not friends!';
 const REMOVED_FRIEND = 'Successfully removed friend from friends list!';
+const URL_NOT_FOUND = 'URL not found!';
 
 module.exports = {
     PAGE_NOT_PASSED,
@@ -35,5 +36,6 @@ module.exports = {
     EMAIL_UPDATED,
     USERNAME_UPDATED,
     USERS_NOT_FRIENDS,
-    REMOVED_FRIEND
+    REMOVED_FRIEND,
+    URL_NOT_FOUND
 };
