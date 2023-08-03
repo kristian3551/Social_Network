@@ -17,6 +17,12 @@ const EMAIL_UPDATED = 'Successfully updated email!';
 const USERS_NOT_FRIENDS = 'Users are not friends!';
 const REMOVED_FRIEND = 'Successfully removed friend from friends list!';
 const URL_NOT_FOUND = 'URL not found!';
+const EMAIL_NOT_VALID = 'Email is not valid!';
+const USERNAME_NOT_VALID = 'Username is not valid!';
+const PASSWORD_TOO_SHORT = 'Password length must be at least 8 characters!';
+const PASSWORD_INVALID_CONTENT = 'Password should contain characters and digits';
+const CONNECTED_TO_DB = 'Successfully connected to database!';
+const SYNC_WITH_DB = 'Successfully synced with database!';
 
 module.exports = {
     PAGE_NOT_PASSED,
@@ -37,5 +43,11 @@ module.exports = {
     USERNAME_UPDATED,
     USERS_NOT_FRIENDS,
     REMOVED_FRIEND,
-    URL_NOT_FOUND
+    URL_NOT_FOUND,
+    EMAIL_NOT_VALID,
+    USERNAME_NOT_VALID,
+    PASSWORD_TOO_SHORT,
+    PASSWORD_INVALID_CONTENT,
+    CONNECTED_TO_DB,
+    SYNC_WITH_DB
 };

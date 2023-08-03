@@ -1,6 +1,11 @@
 const { Sequelize } = require('sequelize');
 const config = require('./config');
 
+const { 
+    CONNECTED_TO_DB,
+    SYNC_WITH_DB    
+} = require('./utils/messages');
+
 const sequelize = new Sequelize(
     config.dbConfig.database,
     config.dbConfig.username,
@@ -9,12 +14,12 @@ const sequelize = new Sequelize(
 );
 
 sequelize.authenticate()
-.then(() => {
-    console.log('Successfully connected to database!')
-})
-.catch(err => {
-    console.log('Error: ', err);
-});
+    .then(() => {
+        console.log(CONNECTED_TO_DB);
+    })
+    .catch(err => {
+        console.log('Error: ', err);
+    });
 
 const db = {
     TokenBlacklist: require('./models/tokenBlacklist')(sequelize),
@@ -23,7 +28,7 @@ const db = {
 
 sequelize.sync({ force: false })
     .then(() => {
-        console.log('Successfully syncronized with database!');
+        console.log(SYNC_WITH_DB);
     });
 
 module.exports = db;
