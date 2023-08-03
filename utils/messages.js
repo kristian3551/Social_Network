@@ -9,6 +9,13 @@ const USER_NOT_LOGGED = 'You are not logged in!';
 const USER_NOT_ADMIN = 'User is not admin!';
 const USER_NOT_END_USER = 'User is not end user!';
 const USER_DELETED = 'Successfully deleted user!';
+const FRIENDS_LIMIT_REACHED = 'You have reached the limit of friends count!';
+const ALREADY_FRIENDS = 'You are already friend with this user!'
+const ADDED_FRIEND = 'Successfully added friend to friends list!';
+const USERNAME_UPDATED = 'Successfully updated username!';
+const EMAIL_UPDATED = 'Successfully updated email!';
+const USERS_NOT_FRIENDS = 'Users are not friends!';
+const REMOVED_FRIEND = 'Successfully removed friend from friends list!';
 
 module.exports = {
     PAGE_NOT_PASSED,
@@ -21,5 +28,12 @@ module.exports = {
     USER_NOT_LOGGED,
     USER_NOT_ADMIN,
     USER_NOT_END_USER,
-    USER_DELETED
+    USER_DELETED,
+    FRIENDS_LIMIT_REACHED,
+    ALREADY_FRIENDS,
+    ADDED_FRIEND,
+    EMAIL_UPDATED,
+    USERNAME_UPDATED,
+    USERS_NOT_FRIENDS,
+    REMOVED_FRIEND
 };
