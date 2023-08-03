@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
-    const User = sequelize.define("user", {
+    const Friendship = sequelize.define("friendship", {
         id: {
             type: DataTypes.BIGINT,
             primaryKey: true,
@@ -9,24 +9,16 @@ module.exports = (sequelize) => {
         },
         username: {
             type: DataTypes.STRING,
-            allowNull: false,
-            unique: true
-        },
-        email: {
-            type: DataTypes.STRING
-        },
-        password: {
-            type: DataTypes.STRING,
             allowNull: false
         },
-        role: {
-            type: DataTypes.INTEGER,
+        friend_username: {
+            type: DataTypes.STRING,
             allowNull: false
         }
     }, {
-        tableName: "users",
+        tableName: "friendships",
         timestamps: false
     });
 
-    return User;
+    return Friendship;
 }

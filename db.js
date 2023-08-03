@@ -25,6 +25,7 @@ sequelize.authenticate()
 const db = {
     TokenBlacklist: require('./models/tokenBlacklist')(sequelize),
     User: require('./models/user')(sequelize),
+    Friendship: require('./models/friendships')(sequelize)
 };
 
 sequelize.sync({ force: false })
