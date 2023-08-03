@@ -1,11 +1,10 @@
 const controller = require('../controllers/admin');
 const router = require('express').Router();
-const isAuth = require('../middlewares/isAuth');
-const isAdmin = require('../middlewares/isAdmin');
+const { isAuth, isAdmin } = require('../middlewares');
 
 router.get('/', isAuth, isAdmin, controller.get.users);
 router.post('/', isAuth, isAdmin, controller.post.user);
 router.patch('/:id/password', isAuth, isAdmin, controller.patch.password);
-router.delete('/:id', isAuth, isAdmin, controller.delete.user); // TODO: Implement when added end user routes!
+router.delete('/:id', isAuth, isAdmin, controller.delete.user);
 
 module.exports = router;
