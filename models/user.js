@@ -24,7 +24,7 @@ module.exports = (sequelize) => {
             allowNull: false
         },
         list_of_friends: {
-            type: DataTypes.ARRAY,
+            type: DataTypes.ARRAY(DataTypes.BIGINT),
             defaultValue: []
         }
     }, {
