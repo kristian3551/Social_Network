@@ -1,10 +1,10 @@
 const { User } = require('../db');
 
 const { PAGE_NOT_PASSED,
-        USER_CREATED,
-        PASSWORD_UPDATED,
-        USER_NOT_FOUND,
-        USER_DELETED
+    USER_CREATED,
+    PASSWORD_UPDATED,
+    USER_NOT_FOUND,
+    USER_DELETED
 } = require('../utils/messages');
 
 const bcrypt = require('bcrypt');
@@ -103,10 +103,25 @@ module.exports = {
         }
     },
     delete: {
-        user: (req, res) => {
+        user: async (req, res) => {
             const { id } = req.params;
 
-            User.destroy({ where: { id } })
+            User.findAll()
+                .then(async (data) => {
+                    data.forEach(async (rawUser) => {
+                        const user = rawUser.toJSON();
+
+                        if(user.list_of_friends.includes(`${id}`)) {
+                            user.list_of_friends = user.list_of_friends
+                                .filter(el => el != `${id}`);
+
+                            await User.update({
+                                list_of_friends: user.list_of_friends
+                            }, { where: { id: user.id } });
+                        }
+                    });
+                    return User.destroy({ where: { id } });
+                })
                 .then(data => {
                     if(!data) 
                         throw {
