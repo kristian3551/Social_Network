@@ -41,20 +41,6 @@ const isPasswordValid = (req, res, next) => {
         return;
     }
 
-    if(password.match(/[a-zA-Z]*/) == password.length) {
-        res.status(501).json({
-            message: PASSWORD_INVALID_CONTENT
-        });
-        return;
-    }
-
-    if(password.match(/[0-9]*/).length == password.length) {
-        res.status(501).json({
-            message: PASSWORD_INVALID_CONTENT
-        });
-        return;
-    }
-
     next();
 }
 

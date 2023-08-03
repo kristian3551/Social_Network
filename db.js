@@ -1,5 +1,6 @@
 const { Sequelize } = require('sequelize');
 const config = require('./config');
+const bcrypt = require('bcrypt');
 
 const { 
     CONNECTED_TO_DB,
@@ -29,6 +30,37 @@ const db = {
 sequelize.sync({ force: false })
     .then(() => {
         console.log(SYNC_WITH_DB);
+        return db.User.findOne({ where: { username: 'admin'} });
+    })
+    .then(data => {
+        if(!data) {
+            bcrypt.genSalt(config.saltRounds, (err, salt) => {
+                if(err) {
+                    console.log(err);
+                    return;
+                }
+                bcrypt.hash(process.env.ADMIN_PASSWORD, salt, (err, hash) => {
+                    if(err) {
+                        console.log(err);
+                        return;
+                    }
+                    else {
+                        db.User.create({
+                            username: 'admin', 
+                            password: hash,
+                            email: 'admin@admin.com',
+                            role: 0
+                        })
+                            .catch(err => {
+                                console.log(err);
+                            });
+                    }
+                });
+            });
+        }
+    })
+    .catch(err => {
+        console.log(err);
     });
 
 module.exports = db;
