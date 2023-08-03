@@ -1,5 +1,8 @@
 const { User } = require('../db');
+
+const bcrypt = require('bcrypt');
 const { saltRounds } = require('../config');
+
 
 const {
     USER_NOT_FOUND,

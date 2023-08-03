@@ -8,7 +8,7 @@ const { PAGE_NOT_PASSED,
 } = require('../utils/messages');
 
 const bcrypt = require('bcrypt');
-const SALT_ROUNDS = 10;
+const { saltRounds } = require('../config');
 
 const MAX_PER_PAGE = 5;
 
@@ -40,7 +40,7 @@ module.exports = {
         user: (req, res) => {
             const { username, email, password, role } = req.body;
 
-            bcrypt.genSalt(SALT_ROUNDS, (err, salt) => {
+            bcrypt.genSalt(saltRounds, (err, salt) => {
                 if(err) {
                     res.status(501).send(err);
                     return;
@@ -74,7 +74,7 @@ module.exports = {
             const { id } = req.params;
             const { password } = req.body;
 
-            bcrypt.genSalt(SALT_ROUNDS, (err, salt) => {
+            bcrypt.genSalt(saltRounds, (err, salt) => {
                 if(err) {
                     res.status(501).send(err);
                     return;
