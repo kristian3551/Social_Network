@@ -5,8 +5,11 @@ const { USER_NOT_LOGGED } = require('../utils/messages');
 
 module.exports = (req, res, next) => {
     const token = req.cookies[authCookieName];
-    if(!token)
+
+    if(!token) {
         res.status(501).send(USER_NOT_LOGGED);
+        return;
+    }
 
     Promise.all([
         jwt.verifyToken(token),
@@ -14,7 +17,7 @@ module.exports = (req, res, next) => {
     ])
         .then(([data, blacklistToken]) => {
             if(blacklistToken)
-                throw "Used token"
+                throw USER_NOT_LOGGED;
 
             req.userId = data.id;
             next();
