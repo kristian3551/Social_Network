@@ -17,7 +17,7 @@ module.exports = {
         users: (req, res) => {
             const { page } = req.query;
             if(!page) {
-                res.status(501).json({
+                res.status(404).json({
                     message: PAGE_NOT_PASSED
                 });
                 return;
@@ -32,7 +32,7 @@ module.exports = {
                     res.status(200).json(users);
                 })
                 .catch(err => {
-                    res.status(501).send(err);
+                    res.status(500).send(err);
                 });
         }
     },
@@ -42,12 +42,12 @@ module.exports = {
 
             bcrypt.genSalt(saltRounds, (err, salt) => {
                 if(err) {
-                    res.status(501).send(err);
+                    res.status(500).send(err);
                     return;
                 }
                 bcrypt.hash(password, salt, (err, hash) => {
                     if(err) {
-                        res.status(501).send(err);
+                        res.status(500).send(err);
                     }
                     else {
                         User.create({
@@ -62,7 +62,7 @@ module.exports = {
                                 });
                             })
                             .catch(err => {
-                                res.status(501).json(err);
+                                res.status(500).send(err);
                             });
                     }
                 });
@@ -76,12 +76,12 @@ module.exports = {
 
             bcrypt.genSalt(saltRounds, (err, salt) => {
                 if(err) {
-                    res.status(501).send(err);
+                    res.status(500).send(err);
                     return;
                 }
                 bcrypt.hash(password, salt, (err, hash) => {
                     if(err) {
-                        res.status(501).send(err);
+                        res.status(500).send(err);
                     }
                     else {
                         User.update({
@@ -95,7 +95,7 @@ module.exports = {
                                 });
                             })
                             .catch(err => {
-                                res.status(501).json(err);
+                                res.status(500).json(err);
                             });
                     }
                 });
@@ -106,34 +106,40 @@ module.exports = {
         user: async (req, res) => {
             const { id } = req.params;
 
-            User.findAll()
-                .then(async (data) => {
+            Promise.all([
+                User.findAll(),
+                User.findOne({ where: { id } })
+            ])
+                .then(async ([data, userToBeDeleted]) => {
+                    userToBeDeleted = userToBeDeleted.toJSON();
+
                     data.forEach(async (rawUser) => {
                         const user = rawUser.toJSON();
 
-                        if(user.list_of_friends.includes(`${id}`)) {
+                        if(user.list_of_friends.includes(userToBeDeleted.username)) {
                             user.list_of_friends = user.list_of_friends
-                                .filter(el => el != `${id}`);
+                                .filter(el => el != userToBeDeleted.username);
 
                             await User.update({
                                 list_of_friends: user.list_of_friends
                             }, { where: { id: user.id } });
                         }
                     });
+
                     return User.destroy({ where: { id } });
                 })
                 .then(data => {
-                    if(!data) 
-                        throw {
+                    if(!data) throw {
                             message: USER_NOT_FOUND
                         }
+
                     res.status(200).json({
                         message: USER_DELETED
-                    })
+                    });
                 })
                 .catch(err => {
-                    res.status(501).send(err);
-                })
+                    res.status(500).send(err);
+                });
         }
     }
 }

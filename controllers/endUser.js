@@ -29,23 +29,26 @@ module.exports = {
                     res.status(200).json(data.toJSON());
                 })
                 .catch(err => {
-                    res.status(501).send(err);
+                    res.status(500).send(err);
                 });
         }
     },
     post: {
         addFriend: (req, res) => {
             const id = req.userId;
-            const { friendId } = req.body;
+            const { friendUsername } = req.body;
 
-            User.findOne({ where: { id: friendId } })
+            User.findOne({ where: { username: friendUsername } })
                 .then(data => {
                     if(!data)
                         throw {
+                            status: 404,
                             message: USER_NOT_FOUND
                         }
+
                     if(data.toJSON().role == 0)
                         throw {
+                            status: 401,
                             message: USER_NOT_END_USER
                         }
 
@@ -54,6 +57,7 @@ module.exports = {
                 .then(data => {
                     if(!data)
                         throw {
+                            status: 404,
                             message: USER_NOT_FOUND
                         }
 
@@ -61,15 +65,17 @@ module.exports = {
 
                     if(user.list_of_friends.length >= MAX_FRIENDS_COUNT)
                         throw {
+                            status: 404,
                             message: FRIENDS_LIMIT_REACHED
                         }
 
-                    if(user.list_of_friends.includes(`${friendId}`))
+                    if(user.list_of_friends.includes(friendUsername))
                         throw {
+                            status: 422,
                             message: ALREADY_FRIENDS
                         }
 
-                    user.list_of_friends.push(`${friendId}`);
+                    user.list_of_friends.push(friendUsername);
 
                     return User.update({ 
                         list_of_friends: user.list_of_friends
@@ -78,10 +84,10 @@ module.exports = {
                 .then(() => {
                     res.status(200).json({
                         message: ADDED_FRIEND
-                    })
+                    });
                 })
                 .catch(err => {
-                    res.status(501).send(err);
+                    res.status(err.status || 500).send(err);
                 });
         }
     },
@@ -94,6 +100,7 @@ module.exports = {
                 .then(data => {
                     if(!data)
                         throw {
+                            status: 404,
                             message: USER_NOT_FOUND
                         }
 
@@ -102,7 +109,7 @@ module.exports = {
                     });
                 })
                 .catch(err => {
-                    res.status(501).send(err);
+                    res.status(err.status || 500).send(err);
                 });
         },
         email: (req, res) => {
@@ -113,6 +120,7 @@ module.exports = {
                 .then(data => {
                     if(!data)
                         throw {
+                            status: 404,
                             message: USER_NOT_FOUND
                         }
 
@@ -121,7 +129,7 @@ module.exports = {
                     });
                 })
                 .catch(err => {
-                    res.status(501).send(err);
+                    res.status(err.status || 500).send(err);
                 });
         },
         password: (req, res) => {
@@ -130,12 +138,12 @@ module.exports = {
 
             bcrypt.genSalt(saltRounds, (err, salt) => {
                 if(err) {
-                    res.status(501).send(err);
+                    res.status(500).send(err);
                     return;
                 }
                 bcrypt.hash(password, salt, (err, hash) => {
                     if(err) {
-                        res.status(501).send(err);
+                        res.status(500).send(err);
                     }
                     else {
                         User.update({
@@ -149,7 +157,7 @@ module.exports = {
                                 });
                             })
                             .catch(err => {
-                                res.status(501).json(err);
+                                res.status(500).json(err);
                             });
                     }
                 });
@@ -159,16 +167,18 @@ module.exports = {
     delete: {
         removeFriend: (req, res) => {
             const id = req.userId;
-            const { friendId } = req.body;
+            const { friendUsername } = req.body;
 
-            User.findOne({ where: { id: friendId } })
+            User.findOne({ where: { username: friendUsername } })
                 .then(data => {
                     if(!data)
                         throw {
+                            status: 404,
                             message: USER_NOT_FOUND
                         }
                     if(data.toJSON().role == 0)
                         throw {
+                            status: 401,
                             message: USER_NOT_END_USER
                         }
 
@@ -177,17 +187,19 @@ module.exports = {
                 .then(data => {
                     if(!data)
                         throw {
+                            status: 404,
                             message: USER_NOT_FOUND
                         }
 
                     const user = data.toJSON();
 
-                    if(!user.list_of_friends.includes(`${friendId}`))
+                    if(!user.list_of_friends.includes(friendUsername))
                         throw {
+                            status: 422,
                             message: USERS_NOT_FRIENDS
                         }
 
-                    user.list_of_friends = user.list_of_friends.filter(friend => friend != `${friendId}`);
+                    user.list_of_friends = user.list_of_friends.filter(friend => friend != friendUsername);
 
                     return User.update({ 
                         list_of_friends: user.list_of_friends
@@ -196,10 +208,10 @@ module.exports = {
                 .then(() => {
                     res.status(200).json({
                         message: REMOVED_FRIEND
-                    })
+                    });
                 })
                 .catch(err => {
-                    res.status(501).send(err);
+                    res.status(err.status || 500).send(err);
                 });
         }
     }

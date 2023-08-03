@@ -22,28 +22,27 @@ module.exports = {
                     if(!user) throw {
                         message: USER_NOT_FOUND
                     }
+
                     return Promise.all([
                         bcrypt.compare(password, user.toJSON().password),
-                        user
+                        user.toJSON()
                     ]);
                 })
                 .then(([match, user]) => {
-                    if(!match)
-                        throw {
+                    if(!match) throw {
                             message: PASSWORD_INCORRECT
-                        };
-                    const token = jwt.createToken({
-                        id: user.toJSON().id
-                    });
+                        }
 
-                    console.log(user.toJSON().id);
+                    const token = jwt.createToken({
+                        id: user.id
+                    });
 
                     res.cookie(authCookieName, token).status(200).json({
                         message: USER_LOGGED_IN
                     });
                 })
                 .catch(err => {
-                    res.status(501).json(err);
+                    res.status(401).send(err);
                 });
         },
         logout: (req, res) => {
@@ -56,8 +55,8 @@ module.exports = {
                     });
                 })
                 .catch(err => {
-                    res.status(501).send(err);
-                })
+                    res.status(500).send(err);
+                });
         }
     }
 }
