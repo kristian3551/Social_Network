@@ -22,10 +22,6 @@ module.exports = (sequelize) => {
         role: {
             type: DataTypes.INTEGER,
             allowNull: false
-        },
-        list_of_friends: {
-            type: DataTypes.ARRAY(DataTypes.STRING),
-            defaultValue: []
         }
     }, {
         tableName: "users",
