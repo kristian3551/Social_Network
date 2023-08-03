@@ -11,5 +11,6 @@ module.exports = {
         }
     },
     secret: process.env.SECRET,
-    authCookieName: 'x-auth-token'
+    authCookieName: 'x-auth-token',
+    saltRounds: 10
 };
