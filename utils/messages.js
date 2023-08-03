@@ -8,6 +8,7 @@ const USER_LOGGED_OUT = 'Successfully logged out!';
 const USER_NOT_LOGGED = 'You are not logged in!';
 const USER_NOT_ADMIN = 'User is not admin!';
 const USER_NOT_END_USER = 'User is not end user!';
+const USER_DELETED = 'Successfully deleted user!';
 
 module.exports = {
     PAGE_NOT_PASSED,
@@ -19,5 +20,6 @@ module.exports = {
     USER_LOGGED_OUT,
     USER_NOT_LOGGED,
     USER_NOT_ADMIN,
-    USER_NOT_END_USER
+    USER_NOT_END_USER,
+    USER_DELETED
 };

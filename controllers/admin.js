@@ -2,7 +2,9 @@ const { User } = require('../db');
 
 const { PAGE_NOT_PASSED,
         USER_CREATED,
-        PASSWORD_UPDATED
+        PASSWORD_UPDATED,
+        USER_NOT_FOUND,
+        USER_DELETED
 } = require('../utils/messages');
 
 const bcrypt = require('bcrypt');
@@ -102,7 +104,21 @@ module.exports = {
     },
     delete: {
         user: (req, res) => {
-            res.status(200).send('TODO');
+            const { id } = req.params;
+
+            User.destroy({ where: { id } })
+                .then(data => {
+                    if(!data) 
+                        throw {
+                            message: USER_NOT_FOUND
+                        }
+                    res.status(200).json({
+                        message: USER_DELETED
+                    })
+                })
+                .catch(err => {
+                    res.status(501).send(err);
+                })
         }
     }
 }
