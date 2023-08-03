@@ -19,7 +19,7 @@ module.exports = (req, res, next) => {
             req.userId = data.id;
             next();
         })
-        .catch(err => {
+        .catch(() => {
             res.status(401).send(USER_NOT_LOGGED);
         });
 }

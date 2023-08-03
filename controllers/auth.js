@@ -3,10 +3,11 @@ const jwt = require('../utils/jwt');
 
 const { User, TokenBlacklist } = require('../db');
 
-const { USER_NOT_FOUND,
-        PASSWORD_INCORRECT,
-        USER_LOGGED_IN,
-        USER_LOGGED_OUT
+const { 
+    USER_NOT_FOUND,
+    PASSWORD_INCORRECT,
+    USER_LOGGED_IN,
+    USER_LOGGED_OUT
 } = require('../utils/messages');
 
 const { authCookieName } = require('../config');
