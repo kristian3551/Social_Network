@@ -2,6 +2,7 @@ require('dotenv').config();
 
 const cookieParser = require('cookie-parser');
 const express = require('express');
+const { join } = require('path');
 
 const config = require('./config');
 const { URL_NOT_FOUND } = require('./utils/messages');
@@ -14,6 +15,7 @@ const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
+app.use(express.static(join(__dirname, './uploads')));
 
 app.use('/api/users', adminRouter);
 app.use('/api/auth', authRouter);

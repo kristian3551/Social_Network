@@ -1,7 +1,7 @@
 const { User, Friendship } = require('../db');
 
 const bcrypt = require('bcrypt');
-const { saltRounds } = require('../config');
+const { saltRounds, domain, staticDirname } = require('../config');
 
 
 const {
@@ -14,10 +14,14 @@ const {
     EMAIL_UPDATED,
     USER_NOT_END_USER,
     USERS_NOT_FRIENDS,
-    REMOVED_FRIEND
+    REMOVED_FRIEND,
+    FILE_TOO_BIG,
+    AVATAR_ADDED,
+    FILE_NOT_PROVIDED
 } = require('../utils/messages');
 
 const MAX_FRIENDS_COUNT = 1000;
+const MAX_AVATAR_SIZE = 5 * 1024 * 1024;
 
 module.exports = {
     get: {
@@ -114,6 +118,38 @@ module.exports = {
                 })
                 .catch(err => {
                     res.status(err.status || 500).send(err);
+                });
+        },
+        avatar: (req, res) => {
+            const id = req.userId;
+            const file = req.file;
+
+            if(!file) {
+                res.status(400).send({
+                    message: FILE_NOT_PROVIDED
+                });
+
+                return;
+            }
+
+            if(file.size > MAX_AVATAR_SIZE) {
+                res.status(400).send({
+                    message: FILE_TOO_BIG
+                });
+
+                return;
+            }
+            
+            const path = domain + file.path.split(staticDirname)[1];
+
+            User.update({ avatar: path }, { where: { id } })
+                .then(() => {
+                    res.status(200).json({
+                        message: AVATAR_ADDED
+                    });
+                })
+                .catch(err => {
+                    res.status(500).send(err);
                 });
         }
     },
