@@ -20,6 +20,8 @@ module.exports = (req, res, next) => {
                 throw USER_NOT_LOGGED;
 
             req.userId = data.id;
+            req.userRole = data.role;
+
             next();
         })
         .catch(() => {

@@ -1,21 +1,17 @@
-const { User } = require('../db');
 const {
     USER_NOT_END_USER
 } = require('../utils/messages');
 
 module.exports = (req, res, next) => {
-    const id = req.userId;
+    const role = req.userRole;
 
-    User.findOne({ where: { id }})
-        .then(data => {
-            if(data.toJSON().role == 1) next();
-            else {
-                throw {
-                    message: USER_NOT_END_USER
-                }
-            }
-        })
-        .catch(err => {
-            res.status(501).send(err);
+    if(role != 1) {
+        res.status(401).send({
+            message: USER_NOT_END_USER
         });
+
+        return;
+    }
+
+    next();
 }
