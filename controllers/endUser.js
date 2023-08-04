@@ -1,8 +1,8 @@
-const { User, Friendship } = require('../db');
+const UserService = require('../services/UserService');
+const FriendshipService = require('../services/FriendshipService');
 
 const bcrypt = require('bcrypt');
 const { saltRounds, domain, staticDirname } = require('../config');
-
 
 const {
     USER_NOT_FOUND,
@@ -28,15 +28,12 @@ module.exports = {
         myInfo: (req, res) => {
             const id = req.userId;
 
-            User.findOne({ where: { id } })
+            UserService.getById(id)
                 .then(data => {
                     const user = data.toJSON();
 
                     return Promise.all([
-                        Friendship.findAll({ 
-                            attributes: ['friend_username'], 
-                            where: { username: user.username } 
-                        }),
+                        FriendshipService.findAllFriendsUsernames(user.username),
                         user
                     ]);
                 })
@@ -44,6 +41,9 @@ module.exports = {
                     data = data.map(el => el.toJSON().friend_username);
                     user.list_of_friends = data;
                     res.status(200).json(user);
+                })
+                .catch(err => {
+                    res.status(500).send(err);
                 });
         }
     },
@@ -52,7 +52,7 @@ module.exports = {
             const id = req.userId;
             const { friendUsername } = req.body;
 
-            User.findOne({ where: { username: friendUsername } })
+            UserService.getByUsername(friendUsername)
                 .then(data => {
                     if(!data)
                         throw {
@@ -65,7 +65,7 @@ module.exports = {
                             message: USER_NOT_END_USER
                         }
 
-                    return User.findOne({ where: { id } });
+                    return UserService.getById(id);
                 })
                 .then(data => {
                     if(!data)
@@ -77,12 +77,7 @@ module.exports = {
                     const user = data.toJSON();
 
                     return Promise.all([
-                        Friendship.findOne({ 
-                            where: { 
-                                username: user.username, 
-                                friend_username: friendUsername 
-                            }
-                        }),
+                        FriendshipService.find(user.username, friendUsername),
                         user
                     ]);
                 })
@@ -94,11 +89,7 @@ module.exports = {
                         }
                     
                     return Promise.all([
-                        Friendship.findAll({ 
-                            where: { 
-                                username: user.username 
-                            }
-                        }),
+                        FriendshipService.findAllFriendshipsByUsername(user.username),
                         user
                     ]);
                 })
@@ -109,7 +100,7 @@ module.exports = {
                             message: FRIENDS_LIMIT_REACHED
                         }
 
-                    return Friendship.create({ username: user.username, friend_username: friendUsername });
+                    return FriendshipService.create(user.username, friendUsername);
                 })
                 .then(() => {
                     res.status(200).json({
@@ -142,7 +133,7 @@ module.exports = {
             
             const path = domain + file.path.split(staticDirname)[1];
 
-            User.update({ avatar: path }, { where: { id } })
+            UserService.updateAvatarById(id, path)
                 .then(() => {
                     res.status(200).json({
                         message: AVATAR_ADDED
@@ -158,7 +149,7 @@ module.exports = {
             const id = req.userId;
             const { username } = req.body;
 
-            User.findOne({ where: { id } })
+            UserService.getById(id)
                 .then(data => {
                     if(!data)
                         throw {
@@ -169,9 +160,9 @@ module.exports = {
                     const user = data.toJSON();
 
                     return Promise.all([
-                        User.update({ username }, { where: { id } }),
-                        Friendship.update({ username }, { where: { username: user.username } }),
-                        Friendship.update({ friend_username: username }, { where: { friend_username: user.username }})
+                        UserService.updateUsernameById(id, username),
+                        FriendshipService.updateUsername(user.username, username),
+                        FriendshipService.updateFriendUsername(user.username, username)
                     ]);
                 })
                 .then(() => {
@@ -187,7 +178,7 @@ module.exports = {
             const id = req.userId;
             const { email } = req.body;
 
-            User.update({ email }, { where: { id } })
+            UserService.updateEmailById(id, email)
                 .then(data => {
                     if(!data)
                         throw {
@@ -217,11 +208,7 @@ module.exports = {
                         res.status(500).send(err);
                     }
                     else {
-                        User.update({
-                            password: hash,
-                        }, {
-                            where: { id }
-                        })
+                        UserService.updatePasswordById(id, hash)
                             .then(() => {
                                 res.status(200).json({
                                     message: PASSWORD_UPDATED
@@ -240,7 +227,7 @@ module.exports = {
             const id = req.userId;
             const { friendUsername } = req.body;
 
-            User.findOne({ where: { username: friendUsername } })
+            UserService.getByUsername(friendUsername)
                 .then(data => {
                     if(!data)
                         throw {
@@ -253,7 +240,7 @@ module.exports = {
                             message: USER_NOT_END_USER
                         }
 
-                    return User.findOne({ where: { id } });
+                    return UserService.getById(id);
                 })
                 .then(data => {
                     if(!data)
@@ -265,12 +252,7 @@ module.exports = {
                     const user = data.toJSON();
 
                     return Promise.all([
-                        Friendship.findOne({ 
-                            where: { 
-                                username: user.username, 
-                                friend_username: friendUsername 
-                            }
-                        }),
+                        FriendshipService.find(user.username, friendUsername),
                         user
                     ]);
                 })
@@ -280,12 +262,7 @@ module.exports = {
                             message: USERS_NOT_FRIENDS
                         }
 
-                    return Friendship.destroy({
-                        where: {
-                            username: user.username,
-                            friend_username: friendUsername
-                        }
-                    });
+                    return FriendshipService.deleteOne(user.username, friendUsername);
                 })
                 .then(() => {
                     res.status(200).json({

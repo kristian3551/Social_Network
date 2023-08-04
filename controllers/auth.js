@@ -1,7 +1,8 @@
 const bcrypt = require('bcrypt');
 const jwt = require('../utils/jwt');
 
-const { User, TokenBlacklist } = require('../db');
+const UserService = require('../services/UserService');
+const TokenBlacklistService = require('../services/TokenBlacklistService');
 
 const { 
     USER_NOT_FOUND,
@@ -17,7 +18,7 @@ module.exports = {
         login: (req, res) => {
             const { username, password } = req.body;
 
-            User.findOne({ where: { username }})
+            UserService.getByUsername(username)
                 .then(user => {
                     if(!user) throw {
                         message: USER_NOT_FOUND
@@ -49,7 +50,7 @@ module.exports = {
         logout: (req, res) => {
             const token = req.cookies[authCookieName];
 
-            TokenBlacklist.create({ token })
+            TokenBlacklistService.addToken(token)
                 .then(() => {
                     res.clearCookie(authCookieName).status(200).json({
                         message: USER_LOGGED_OUT

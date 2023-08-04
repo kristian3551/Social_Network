@@ -1,5 +1,5 @@
-const { User, Friendship } = require('../db');
-const { Op } = require("sequelize");
+const UserService = require('../services/UserService');
+const FriendshipService = require('../services/FriendshipService');
 
 const { PAGE_NOT_PASSED,
     USER_CREATED,
@@ -10,8 +10,6 @@ const { PAGE_NOT_PASSED,
 
 const bcrypt = require('bcrypt');
 const { saltRounds } = require('../config');
-
-const MAX_PER_PAGE = 5;
 
 module.exports = {
     get: {
@@ -24,22 +22,13 @@ module.exports = {
                 return;
             }
 
-            User.findAll({
-                order: [['username']], 
-                limit: MAX_PER_PAGE, offset: MAX_PER_PAGE * (page - 1) 
-            })
+            UserService.getAll(page)
                 .then(data => {
                     const users = data.map(rawUser => rawUser.toJSON());
                     const listOfUsernames = users.map(user => user.username);
 
                     return Promise.all([
-                        Friendship.findAll({
-                            where: {
-                                username: {
-                                    [Op.in]: listOfUsernames
-                                }
-                            }
-                        }),
+                        FriendshipService.findAllFriendshipsForUsers(listOfUsernames),
                         users
                     ]);
                 })
@@ -72,12 +61,7 @@ module.exports = {
                         res.status(500).send(err);
                     }
                     else {
-                        User.create({
-                            username,
-                            email,
-                            password: hash,
-                            role
-                        })
+                        UserService.createUser(username, hash, role, email)
                             .then(() => {
                                 res.status(200).json({
                                     message: USER_CREATED
@@ -106,11 +90,7 @@ module.exports = {
                         res.status(500).send(err);
                     }
                     else {
-                        User.update({
-                            password: hash,
-                        }, {
-                            where: { id }
-                        })
+                        UserService.updatePasswordById(id, hash)
                             .then(() => {
                                 res.status(200).json({
                                     message: PASSWORD_UPDATED
@@ -128,7 +108,7 @@ module.exports = {
         user: (req, res) => {
             const { id } = req.params;
             
-            User.findOne({ where: { id } })
+            UserService.getById(id)
                 .then(data => {
                     if(!data)
                         throw {
@@ -139,13 +119,8 @@ module.exports = {
                     const user = data.toJSON();
 
                     return Promise.all([
-                        User.destroy({ where: { id } }),
-                        Friendship.destroy({ where: {
-                            [Op.or]: [
-                                { username: user.username },
-                                { friend_username: user.username }
-                            ]
-                        }})
+                        UserService.deleteById(id),
+                        FriendshipService.deleteAllByUsername(user.username)
                     ]);
                 })
                 .then(() => {
@@ -155,7 +130,7 @@ module.exports = {
                 })
                 .catch(err => {
                     res.status(err.status || 500).send(err);
-                })
+                });
         }
     }
 }
