@@ -23,6 +23,9 @@ const PASSWORD_TOO_SHORT = 'Password length must be at least 8 characters!';
 const PASSWORD_INVALID_CONTENT = 'Password should contain characters and digits';
 const CONNECTED_TO_DB = 'Successfully connected to database!';
 const SYNC_WITH_DB = 'Successfully synced with database!';
+const FILE_TOO_BIG = 'Uploaded avatar image is too big!';
+const AVATAR_ADDED = 'Successfully added avatar!';
+const FILE_NOT_PROVIDED = 'File is not passed as parameter!';
 
 module.exports = {
     PAGE_NOT_PASSED,
@@ -49,5 +52,8 @@ module.exports = {
     PASSWORD_TOO_SHORT,
     PASSWORD_INVALID_CONTENT,
     CONNECTED_TO_DB,
-    SYNC_WITH_DB
+    SYNC_WITH_DB,
+    FILE_TOO_BIG,
+    AVATAR_ADDED,
+    FILE_NOT_PROVIDED
 };
