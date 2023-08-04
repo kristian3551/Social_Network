@@ -22,6 +22,9 @@ module.exports = (sequelize) => {
         role: {
             type: DataTypes.INTEGER,
             allowNull: false
+        },
+        avatar: {
+            type: DataTypes.STRING
         }
     }, {
         tableName: "users",
