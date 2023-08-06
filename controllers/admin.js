@@ -15,8 +15,8 @@ module.exports = {
     get: {
         users: (req, res) => {
             const { page } = req.query;
-            if(!page) {
-                res.status(404).json({
+            if(!page || page < 0) {
+                res.status(400).json({
                     message: PAGE_NOT_PASSED
                 });
                 return;
@@ -33,7 +33,7 @@ module.exports = {
                     ]);
                 })
                 .then(([friendships, users]) => {
-                       friendships = friendships.map(friendship => friendship.toJSON());
+                    friendships = friendships.map(friendship => friendship.toJSON());
 
                     users.forEach(user => {
                         user.list_of_friends = friendships.filter(friendship => friendship.username == user.username)
@@ -116,12 +116,7 @@ module.exports = {
                             message: USER_NOT_FOUND
                         }
 
-                    const user = data.toJSON();
-
-                    return Promise.all([
-                        UserService.deleteById(id),
-                        FriendshipService.deleteAllByUsername(user.username)
-                    ]);
+                    return UserService.deleteById(id);
                 })
                 .then(() => {
                     res.status(200).json({

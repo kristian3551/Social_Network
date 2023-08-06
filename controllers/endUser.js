@@ -33,7 +33,7 @@ module.exports = {
                     const user = data.toJSON();
 
                     return Promise.all([
-                        FriendshipService.findAllFriendsUsernames(user.username),
+                        FriendshipService.findAllFriendshipsByUsername(user.username),
                         user
                     ]);
                 })
@@ -149,22 +149,7 @@ module.exports = {
             const id = req.userId;
             const { username } = req.body;
 
-            UserService.getById(id)
-                .then(data => {
-                    if(!data)
-                        throw {
-                            status: 404,
-                            message: USER_NOT_FOUND
-                        }
-
-                    const user = data.toJSON();
-
-                    return Promise.all([
-                        UserService.updateUsernameById(id, username),
-                        FriendshipService.updateUsername(user.username, username),
-                        FriendshipService.updateFriendUsername(user.username, username)
-                    ]);
-                })
+            UserService.updateUsernameById(id, username)
                 .then(() => {
                     res.status(200).json({
                         message: USERNAME_UPDATED

@@ -60,14 +60,6 @@ class FriendshipService {
             friend_username: friendUsername 
         });
     }
-
-    static updateUsername(oldUsername, newUsername) {
-        return Friendship.update({ username: newUsername }, { where: { username: oldUsername } });
-    }
-
-    static updateFriendUsername(oldUsername, newUsername) {
-        return Friendship.update({ friend_username: newUsername }, { where: { friend_username: oldUsername }});
-    }
 }
 
 module.exports = FriendshipService;

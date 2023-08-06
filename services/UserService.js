@@ -1,4 +1,5 @@
-const { User } = require('../db');
+const { User, Friendship } = require('../db');
+const { Op } = require('sequelize');
 
 const MAX_PER_PAGE = 5;
 
@@ -40,7 +41,16 @@ class UserService {
     }
 
     static updateUsernameById(id, username) {
-        return User.update({ username }, { where: { id } });
+        return User.findOne({ where: { id } })
+            .then(data => {
+                const user = data.toJSON();
+
+                return Promise.all([
+                    User.update({ username }, { where: { id } }),
+                    Friendship.update({ username }, { where: { username: user.username } }),
+                    Friendship.update({ friend_username: username }, { where: { friend_username: user.username }})
+                ]);
+            });
     }
 
     static updateEmailById(id, email) {
@@ -48,7 +58,20 @@ class UserService {
     }
 
     static deleteById(id) {
-        return User.destroy({ where: { id } });
+        return User.findOne({ where: { id } })
+            .then(data => {
+                const username = data.toJSON().username;
+
+                return Promise.all([
+                    User.destroy({ where: { id } }),
+                    Friendship.destroy({ where: {
+                        [Op.or]: [
+                            { username: username },
+                            { friend_username: username }
+                        ]
+                    }})
+                ]);
+            });
     }
 }
 
