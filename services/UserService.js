@@ -1,4 +1,4 @@
-import { User, Friendship } from '../db.js';
+import { User, Friendship } from '../models/db.js';
 import { Op } from 'sequelize';
 
 const MAX_PER_PAGE = 5;

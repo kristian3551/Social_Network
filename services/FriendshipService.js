@@ -1,4 +1,4 @@
-import { Friendship } from '../db.js';
+import { Friendship } from '../models/db.js';
 import { Op } from "sequelize";
 
 class FriendshipService {

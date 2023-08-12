@@ -1,12 +1,12 @@
 import { Sequelize } from 'sequelize';
-import { dbConfig, saltRounds } from './config/index.js';
+import { dbConfig, saltRounds } from '../config/index.js';
 import { genSalt, hash as _hash } from 'bcrypt';
 
-import UserModel from './models/user.js'
-import FriendshipModel from './models/friendships.js'
-import TokenBlacklistModel from './models/tokenBlacklist.js'
+import UserModel from './user.js'
+import FriendshipModel from './friendships.js'
+import TokenBlacklistModel from './tokenBlacklist.js'
 
-import { CONNECTED_TO_DB, SYNC_WITH_DB } from './utils/messages.js';
+import { CONNECTED_TO_DB, SYNC_WITH_DB } from '../utils/messages.js';
 
 const sequelize = new Sequelize(
     dbConfig.database,

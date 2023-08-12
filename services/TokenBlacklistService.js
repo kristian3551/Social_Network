@@ -1,4 +1,4 @@
-import { TokenBlacklist } from '../db.js';
+import { TokenBlacklist } from '../models/db.js';
 
 class TokenBlacklistService {
     static addToken(token) {
