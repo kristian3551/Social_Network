@@ -1,17 +1,19 @@
-const jwt = require('../utils/jwt');
-const { authCookieName } = require('../config');
-const { USER_NOT_LOGGED } = require('../utils/messages');
+import { verifyToken } from '../utils/jwt.js';
+import { authCookieName } from '../config/index.js';
+import { USER_NOT_LOGGED } from '../utils/messages.js';
 
-module.exports = (req, res, next) => {
+export default (req, res, next) => {
     const token = req.cookies[authCookieName];
 
     if(!token) {
-        res.status(401).send(USER_NOT_LOGGED);
+        res.status(401).send({
+            message: USER_NOT_LOGGED
+        });
         return;
     }
 
     try {
-        const data = jwt.verifyToken(token);
+        const data = verifyToken(token);
 
         req.userId = data.id;
         req.userRole = data.role;
@@ -19,6 +21,8 @@ module.exports = (req, res, next) => {
         next();
     }
     catch(err) {
-        res.status(401).send(USER_NOT_LOGGED);
+        res.status(401).send({
+            message: USER_NOT_LOGGED
+        });
     }
 }

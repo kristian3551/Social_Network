@@ -1,6 +1,7 @@
-const { DataTypes } = require('sequelize');
+import { DataTypes } from 'sequelize';
+import { domain } from '../config/index.js';
 
-module.exports = (sequelize) => {
+export default (sequelize) => {
     const User = sequelize.define("user", {
         id: {
             type: DataTypes.BIGINT,
@@ -13,7 +14,8 @@ module.exports = (sequelize) => {
             unique: true
         },
         email: {
-            type: DataTypes.STRING
+            type: DataTypes.STRING,
+            unique: true
         },
         password: {
             type: DataTypes.STRING,
@@ -21,10 +23,12 @@ module.exports = (sequelize) => {
         },
         role: {
             type: DataTypes.INTEGER,
-            allowNull: false
+            allowNull: false,
+            defaultValue: 1
         },
         avatar: {
-            type: DataTypes.STRING
+            type: DataTypes.STRING,
+            defaultValue: `${domain}/default_avatar.jpg`
         }
     }, {
         tableName: "users",

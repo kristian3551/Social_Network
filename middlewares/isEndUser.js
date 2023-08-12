@@ -1,8 +1,6 @@
-const {
-    USER_NOT_END_USER
-} = require('../utils/messages');
+import { USER_NOT_END_USER } from '../utils/messages.js';
 
-module.exports = (req, res, next) => {
+export default (req, res, next) => {
     const role = req.userRole;
 
     if(role != 1) {

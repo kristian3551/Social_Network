@@ -1,8 +1,6 @@
-const {
-    USER_NOT_ADMIN
-} = require('../utils/messages');
+import { USER_NOT_ADMIN } from '../utils/messages.js';
 
-module.exports = (req, res, next) => {
+export default (req, res, next) => {
     const role = req.userRole;
 
     if(role != 0) {

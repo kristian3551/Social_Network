@@ -1,5 +1,11 @@
-const multer = require('multer');
-const { staticDirname } = require('../config');
+import multer, { diskStorage } from 'multer';
+import { staticDirname } from '../config/index.js';
+
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const filename = (req, file, next) => {
     const lastDotIndex =  file.originalname.lastIndexOf('.');
@@ -12,8 +18,8 @@ const destination = (req, file, next) => {
     next(null, `${__dirname}/../${staticDirname}`);
 };
 
-module.exports = multer({
-    storage: multer.diskStorage({ 
+export default multer({
+    storage: diskStorage({ 
         destination, filename
     })
 })

@@ -1,12 +1,8 @@
-const { isEmail } = require('validator');
+import validator from 'validator';
 
-const {
-    EMAIL_NOT_VALID,
-    PASSWORD_TOO_SHORT,
-    USERNAME_NOT_VALID
-} = require('../utils/messages');
+import { EMAIL_NOT_VALID, PASSWORD_TOO_SHORT, USERNAME_NOT_VALID } from '../utils/messages.js';
 
-const isEmailValid = (req, res, next) => {
+export const isEmailValid = (req, res, next) => {
     const { email } = req.body;
 
     if(email == undefined) {
@@ -14,7 +10,7 @@ const isEmailValid = (req, res, next) => {
         return;
     }
 
-    if(!isEmail(email)) {
+    if(!validator.isEmail(email)) {
         res.status(400).json({
             message: EMAIL_NOT_VALID
         });
@@ -24,7 +20,7 @@ const isEmailValid = (req, res, next) => {
     next();
 }
 
-const isUsernameValid = (req, res, next) => {
+export const isUsernameValid = (req, res, next) => {
     const { username } = req.body;
 
     if(!username) {
@@ -36,7 +32,7 @@ const isUsernameValid = (req, res, next) => {
     next();
 }
 
-const isPasswordValid = (req, res, next) => {
+export const isPasswordValid = (req, res, next) => {
     const { password } = req.body;
 
     if(password.length < 8) {
@@ -49,7 +45,7 @@ const isPasswordValid = (req, res, next) => {
     next();
 }
 
-module.exports = {
+export default {
     isEmailValid,
     isPasswordValid,
     isUsernameValid

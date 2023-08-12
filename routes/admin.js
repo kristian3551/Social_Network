@@ -1,10 +1,34 @@
-const controller = require('../controllers/admin');
-const router = require('express').Router();
-const { isAuth, isAdmin, isPasswordValid, isUsernameValid, isEmailValid, isTokenNew } = require('../middlewares');
+import { get, post, patch, deleteRequests } from '../controllers/admin.js';
+import express from 'express'
+import middlewares from '../middlewares/index.js';
 
-router.get('/', isAuth, isTokenNew, isAdmin, controller.get.users);
-router.post('/', isUsernameValid, isPasswordValid, isEmailValid, isAuth, isTokenNew, isAdmin, controller.post.user);
-router.patch('/:id/password', isPasswordValid, isAuth, isTokenNew, isAdmin, controller.patch.password);
-router.delete('/:id', isAuth, isTokenNew, isAdmin, controller.delete.user);
+const router = express.Router();
 
-module.exports = router;
+router.get('/', 
+     middlewares.isAuth, 
+     middlewares.isTokenNew,
+     middlewares.isAdmin, 
+     get.users);
+
+router.post('/', middlewares.isUsernameValid,
+     middlewares.isPasswordValid,
+     middlewares.isEmailValid, 
+     middlewares.isAuth, 
+     middlewares.isTokenNew, 
+     middlewares.isAdmin, 
+     post.user);
+
+router.patch('/:id/password',
+     middlewares.isPasswordValid, 
+     middlewares.isAuth, 
+     middlewares.isTokenNew, 
+     middlewares.isAdmin, 
+     patch.password);
+
+router.delete('/:id', 
+     middlewares.isAuth, 
+     middlewares.isTokenNew, 
+     middlewares.isAdmin,
+     deleteRequests.user);
+
+export default router;

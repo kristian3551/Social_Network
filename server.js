@@ -1,19 +1,23 @@
-require('dotenv').config();
+import 'dotenv/config'
 
-const cookieParser = require('cookie-parser');
-const express = require('express');
-const { join } = require('path');
+import cookieParser from 'cookie-parser';
+import express, { json } from 'express';
+import path, { join } from 'path';
+import { fileURLToPath } from 'url';
 
-const config = require('./config');
-const { URL_NOT_FOUND } = require('./utils/messages');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const adminRouter = require('./routes/admin');
-const authRouter = require('./routes/auth');
-const endUserRouter = require('./routes/endUser');
+import { port } from './config/index.js';
+import { URL_NOT_FOUND } from './utils/messages.js';
+
+import adminRouter from './routes/admin.js';
+import authRouter from './routes/auth.js';
+import endUserRouter from './routes/endUser.js';
 
 const app = express();
 
-app.use(express.json());
+app.use(json());
 app.use(cookieParser());
 app.use(express.static(join(__dirname, './uploads')));
 
@@ -27,6 +31,6 @@ app.use('*', (req, res) => {
     });
 })
 
-app.listen(config.port, () => {
-    console.log(`Listening on port ${config.port}`);
+app.listen(port, () => {
+    console.log(`Listening on port ${port}`);
 });

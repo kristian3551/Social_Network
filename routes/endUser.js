@@ -1,13 +1,47 @@
-const controller = require('../controllers/endUser');
-const router = require('express').Router();
-const { isAuth, isEndUser, isUsernameValid, isEmailValid, isPasswordValid, uploader, isTokenNew } = require('../middlewares');
+import { get, patch, post, deleteRequests } from '../controllers/endUser.js';
+import express from 'express'
+import middlewares from '../middlewares/index.js';
 
-router.get('/', isAuth, isTokenNew, controller.get.myInfo);
-router.patch('/username', isUsernameValid, isAuth, isTokenNew, controller.patch.username);
-router.patch('/email', isEmailValid, isAuth, isTokenNew, controller.patch.email);
-router.patch('/password', isPasswordValid, isAuth, isTokenNew, controller.patch.password);
-router.post('/friends', isAuth, isTokenNew, isEndUser, controller.post.addFriend);
-router.post('/avatar', isAuth, isTokenNew, uploader.single('avatar'), controller.post.avatar);
-router.delete('/friends', isAuth, isTokenNew, isEndUser, controller.delete.removeFriend);
+const router = express.Router();
 
-module.exports = router;
+router.get('/',
+    middlewares.isAuth,
+    middlewares.isTokenNew,
+    get.myInfo);
+
+router.patch('/username', middlewares.isUsernameValid,
+    middlewares.isAuth,
+    middlewares.isTokenNew,
+    patch.username);
+
+router.patch('/email',
+    middlewares.isEmailValid,
+    middlewares.isAuth,
+    middlewares.isTokenNew,
+    patch.email);
+
+router.patch('/password',
+    middlewares.isPasswordValid,
+    middlewares.isAuth,
+    middlewares.isTokenNew,
+    patch.password);
+
+router.post('/friends',
+    middlewares.isAuth,
+    middlewares.isTokenNew,
+    middlewares.isEndUser,
+    post.addFriend);
+
+router.post('/avatar',
+    middlewares.isAuth,
+    middlewares.isTokenNew,
+    middlewares.uploader.single('avatar'),
+    post.avatar);
+
+router.delete('/friends',
+    middlewares.isAuth,
+    middlewares.isTokenNew,
+    middlewares.isEndUser,
+    deleteRequests.removeFriend);
+
+export default router;

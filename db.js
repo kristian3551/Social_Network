@@ -1,17 +1,18 @@
-const { Sequelize } = require('sequelize');
-const config = require('./config');
-const bcrypt = require('bcrypt');
+import { Sequelize } from 'sequelize';
+import { dbConfig, saltRounds } from './config/index.js';
+import { genSalt, hash as _hash } from 'bcrypt';
 
-const { 
-    CONNECTED_TO_DB,
-    SYNC_WITH_DB    
-} = require('./utils/messages');
+import UserModel from './models/user.js'
+import FriendshipModel from './models/friendships.js'
+import TokenBlacklistModel from './models/tokenBlacklist.js'
+
+import { CONNECTED_TO_DB, SYNC_WITH_DB } from './utils/messages.js';
 
 const sequelize = new Sequelize(
-    config.dbConfig.database,
-    config.dbConfig.username,
-    config.dbConfig.password, 
-    config.dbConfig.options
+    dbConfig.database,
+    dbConfig.username,
+    dbConfig.password, 
+    dbConfig.options
 );
 
 sequelize.authenticate()
@@ -23,9 +24,9 @@ sequelize.authenticate()
     });
 
 const db = {
-    TokenBlacklist: require('./models/tokenBlacklist')(sequelize),
-    User: require('./models/user')(sequelize),
-    Friendship: require('./models/friendships')(sequelize)
+    TokenBlacklist: TokenBlacklistModel(sequelize),
+    User: UserModel(sequelize),
+    Friendship: FriendshipModel(sequelize)
 };
 
 sequelize.sync({ force: false })
@@ -35,12 +36,12 @@ sequelize.sync({ force: false })
     })
     .then(data => {
         if(!data) {
-            bcrypt.genSalt(config.saltRounds, (err, salt) => {
+            genSalt(saltRounds, (err, salt) => {
                 if(err) {
                     console.log(err);
                     return;
                 }
-                bcrypt.hash(process.env.ADMIN_PASSWORD, salt, (err, hash) => {
+                _hash(process.env.ADMIN_PASSWORD, salt, (err, hash) => {
                     if(err) {
                         console.log(err);
                         return;
@@ -64,4 +65,6 @@ sequelize.sync({ force: false })
         console.log(err);
     });
 
-module.exports = db;
+export const Friendship = db.Friendship;
+export const User = db.User;
+export const TokenBlacklist = db.TokenBlacklist;

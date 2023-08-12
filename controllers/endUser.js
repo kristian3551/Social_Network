@@ -1,10 +1,11 @@
-const UserService = require('../services/UserService');
-const FriendshipService = require('../services/FriendshipService');
+import UserService from '../services/UserService.js';
+import FriendshipService from '../services/FriendshipService.js';
+import fs from 'fs'
 
-const bcrypt = require('bcrypt');
-const { saltRounds, domain, staticDirname } = require('../config');
+import { genSalt, hash as _hash } from 'bcrypt';
+import { saltRounds, domain, staticDirname } from '../config/index.js';
 
-const {
+import {
     USER_NOT_FOUND,
     FRIENDS_LIMIT_REACHED,
     ALREADY_FRIENDS,
@@ -18,245 +19,230 @@ const {
     FILE_TOO_BIG,
     AVATAR_ADDED,
     FILE_NOT_PROVIDED
-} = require('../utils/messages');
+} from '../utils/messages.js';
 
 const MAX_FRIENDS_COUNT = 1000;
 const MAX_AVATAR_SIZE = 5 * 1024 * 1024;
 
-module.exports = {
-    get: {
-        myInfo: (req, res) => {
-            const id = req.userId;
+export const get = {
+    myInfo: async (req, res) => {
+        const id = req.userId;
 
-            UserService.getById(id)
-                .then(data => {
-                    const user = data.toJSON();
+        try {
+            const userData = await UserService.getById(id);
+            const user = userData.toJSON();
 
-                    return Promise.all([
-                        FriendshipService.findAllFriendshipsByUsername(user.username),
-                        user
-                    ]);
-                })
-                .then(([data, user]) => {
-                    data = data.map(el => el.toJSON().friend_username);
-                    user.list_of_friends = data;
-                    res.status(200).json(user);
-                })
-                .catch(err => {
-                    res.status(500).send(err);
-                });
+            const data = await FriendshipService.findAllFriendshipsByUsername(user.username);
+
+            const friends = data.map(el => el.toJSON().friend_username);
+            user.list_of_friends = friends;
+            res.status(200).json(user);
         }
-    },
-    post: {
-        addFriend: (req, res) => {
-            const id = req.userId;
-            const { friendUsername } = req.body;
-
-            UserService.getByUsername(friendUsername)
-                .then(data => {
-                    if(!data)
-                        throw {
-                            status: 404,
-                            message: USER_NOT_FOUND
-                        }
-                    if(data.toJSON().role == 0)
-                        throw {
-                            status: 401,
-                            message: USER_NOT_END_USER
-                        }
-
-                    return UserService.getById(id);
-                })
-                .then(data => {
-                    if(!data)
-                        throw {
-                            status: 404,
-                            message: USER_NOT_FOUND
-                        }
-
-                    const user = data.toJSON();
-
-                    return Promise.all([
-                        FriendshipService.find(user.username, friendUsername),
-                        user
-                    ]);
-                })
-                .then(([data, user]) => {
-                    if(data)
-                        throw {
-                            status: 422,
-                            message: ALREADY_FRIENDS
-                        }
-                    
-                    return Promise.all([
-                        FriendshipService.findAllFriendshipsByUsername(user.username),
-                        user
-                    ]);
-                })
-                .then(([data, user]) => {
-                    if(data.length >= MAX_FRIENDS_COUNT)
-                        throw {
-                            status: 422,
-                            message: FRIENDS_LIMIT_REACHED
-                        }
-
-                    return FriendshipService.create(user.username, friendUsername);
-                })
-                .then(() => {
-                    res.status(200).json({
-                        message: ADDED_FRIEND
-                    });
-                })
-                .catch(err => {
-                    res.status(err.status || 500).send(err);
-                });
-        },
-        avatar: (req, res) => {
-            const id = req.userId;
-            const file = req.file;
-
-            if(!file) {
-                res.status(400).send({
-                    message: FILE_NOT_PROVIDED
-                });
-
-                return;
-            }
-
-            if(file.size > MAX_AVATAR_SIZE) {
-                res.status(400).send({
-                    message: FILE_TOO_BIG
-                });
-
-                return;
-            }
-            
-            const path = domain + file.path.split(staticDirname)[1];
-
-            UserService.updateAvatarById(id, path)
-                .then(() => {
-                    res.status(200).json({
-                        message: AVATAR_ADDED
-                    });
-                })
-                .catch(err => {
-                    res.status(500).send(err);
-                });
-        }
-    },
-    patch: {
-        username: (req, res) => {
-            const id = req.userId;
-            const { username } = req.body;
-
-            UserService.updateUsernameById(id, username)
-                .then(() => {
-                    res.status(200).json({
-                        message: USERNAME_UPDATED
-                    });
-                })
-                .catch(err => {
-                    res.status(err.status || 500).send(err);
-                });
-        },
-        email: (req, res) => {
-            const id = req.userId;
-            const { email } = req.body;
-
-            UserService.updateEmailById(id, email)
-                .then(data => {
-                    if(!data)
-                        throw {
-                            status: 404,
-                            message: USER_NOT_FOUND
-                        }
-
-                    res.status(200).json({
-                        message: EMAIL_UPDATED
-                    });
-                })
-                .catch(err => {
-                    res.status(err.status || 500).send(err);
-                });
-        },
-        password: (req, res) => {
-            const id = req.userId;
-            const { password } = req.body;
-
-            bcrypt.genSalt(saltRounds, (err, salt) => {
-                if(err) {
-                    res.status(500).send(err);
-                    return;
-                }
-                bcrypt.hash(password, salt, (err, hash) => {
-                    if(err) {
-                        res.status(500).send(err);
-                    }
-                    else {
-                        UserService.updatePasswordById(id, hash)
-                            .then(() => {
-                                res.status(200).json({
-                                    message: PASSWORD_UPDATED
-                                });
-                            })
-                            .catch(err => {
-                                res.status(500).json(err);
-                            });
-                    }
-                });
-            });
-        }
-    },
-    delete: {
-        removeFriend: (req, res) => {
-            const id = req.userId;
-            const { friendUsername } = req.body;
-
-            UserService.getByUsername(friendUsername)
-                .then(data => {
-                    if(!data)
-                        throw {
-                            status: 404,
-                            message: USER_NOT_FOUND
-                        }
-                    if(data.toJSON().role == 0)
-                        throw {
-                            status: 401,
-                            message: USER_NOT_END_USER
-                        }
-
-                    return UserService.getById(id);
-                })
-                .then(data => {
-                    if(!data)
-                        throw {
-                            status: 404,
-                            message: USER_NOT_FOUND
-                        }
-
-                    const user = data.toJSON();
-
-                    return Promise.all([
-                        FriendshipService.find(user.username, friendUsername),
-                        user
-                    ]);
-                })
-                .then(([data, user]) => {
-                    if(!data)
-                        throw {
-                            message: USERS_NOT_FRIENDS
-                        }
-
-                    return FriendshipService.deleteOne(user.username, friendUsername);
-                })
-                .then(() => {
-                    res.status(200).json({
-                        message: REMOVED_FRIEND
-                    });
-                })
-                .catch(err => {
-                    res.status(err.status || 500).send(err);
-                });
+        catch (err) {
+            res.status(500).send(err);
         }
     }
-}
+};
+export const post = {
+    addFriend: async (req, res) => {
+        const id = req.userId;
+        const { friendUsername } = req.body;
+
+        try {
+            const friendData = await UserService.getByUsername(friendUsername);
+
+            if (!friendData)
+                throw {
+                    status: 404,
+                    message: USER_NOT_FOUND
+                };
+            if (friendData.toJSON().role == 0)
+                throw {
+                    status: 401,
+                    message: USER_NOT_END_USER
+                };
+
+            const userData = await UserService.getById(id);
+
+            if (!userData)
+                throw {
+                    status: 404,
+                    message: USER_NOT_FOUND
+                };
+
+            const user = userData.toJSON();
+
+            const friendship = await FriendshipService.find(user.username, friendUsername);
+            if (friendship)
+                throw {
+                    status: 422,
+                    message: ALREADY_FRIENDS
+                };
+                
+            const friendships = await FriendshipService.findAllFriendshipsByUsername(user.username);
+
+            if (friendships.length >= MAX_FRIENDS_COUNT)
+                throw {
+                    status: 422,
+                    message: FRIENDS_LIMIT_REACHED
+                };
+
+            await FriendshipService.create(user.username, friendUsername);
+
+            res.status(200).json({
+                message: ADDED_FRIEND
+            });
+        }
+        catch (err) {
+            console.log(err);
+            res.status(err.status || 500).send(err);
+        }
+    },
+    avatar: async (req, res) => {
+        const id = req.userId;
+        const file = req.file;
+
+        if (!file) {
+            res.status(400).send({
+                message: FILE_NOT_PROVIDED
+            });
+
+            return;
+        }
+
+        if (file.size > MAX_AVATAR_SIZE) {
+            res.status(400).send({
+                message: FILE_TOO_BIG
+            });
+
+            return;
+        }
+
+        const filePath = domain + file.path.split(staticDirname)[1];
+
+        try {
+            await UserService.updateAvatarById(id, filePath);
+
+            res.status(200).json({
+                message: AVATAR_ADDED
+            });
+        }
+        catch(err) {
+            fs.unlinkSync(`uploads/${file.filename}`);
+            res.status(500).send(err);
+        }
+    }
+};
+export const patch = {
+    username: async (req, res) => {
+        const id = req.userId;
+        const { username } = req.body;
+
+        try {
+            await UserService.updateUsernameById(id, username);
+
+            res.status(200).json({
+                message: USERNAME_UPDATED
+            });
+        }
+        catch(err) {
+            res.status(500).send(err);
+        }
+    },
+    email: async (req, res) => {
+        const id = req.userId;
+        const { email } = req.body;
+
+        try {
+            const data = await UserService.updateEmailById(id, email);
+
+            if (!data)
+                throw {
+                    status: 404,
+                    message: USER_NOT_FOUND
+                };
+
+            res.status(200).json({
+                message: EMAIL_UPDATED
+            });
+        }
+        catch(err) {
+            res.status(err.status || 500).send(err);
+        }
+    },
+    password: (req, res) => {
+        const id = req.userId;
+        const { password } = req.body;
+
+        genSalt(saltRounds, (err, salt) => {
+            if (err) {
+                res.status(500).send(err);
+                return;
+            }
+            _hash(password, salt, async (err, hash) => {
+                if (err) {
+                    res.status(500).send(err);
+                }
+                else {
+                    try {
+                        await UserService.updatePasswordById(id, hash);
+
+                        res.status(200).json({
+                            message: PASSWORD_UPDATED
+                        });
+                    }
+                    catch(err) {
+                        res.status(500).json(err);
+                    }
+                }
+            });
+        });
+    }
+};
+export const deleteRequests = {
+    removeFriend: async (req, res) => {
+        const id = req.userId;
+        const { friendUsername } = req.body;
+
+        try {
+            const friendData = await UserService.getByUsername(friendUsername);
+
+            if (!friendData)
+                throw {
+                    status: 404,
+                    message: USER_NOT_FOUND
+                };
+            if (friendData.toJSON().role == 0)
+                throw {
+                    status: 401,
+                    message: USER_NOT_END_USER
+                };
+
+            const userData = await UserService.getById(id);
+
+            if (!userData)
+                throw {
+                    status: 404,
+                    message: USER_NOT_FOUND
+                };
+
+            const user = userData.toJSON();
+
+            const friendship = await FriendshipService.find(user.username, friendUsername);
+            if (!friendship)
+                throw {
+                    status: 422,
+                    message: USERS_NOT_FRIENDS
+                };
+            
+            await FriendshipService.deleteOne(user.username, friendUsername);
+
+            res.status(200).json({
+                message: REMOVED_FRIEND
+            });
+        }
+        catch (err) {
+            res.status(err.status || 500).send(err);
+        }
+    }
+};

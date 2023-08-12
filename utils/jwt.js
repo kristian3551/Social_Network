@@ -1,16 +1,16 @@
-const jwt = require('jsonwebtoken');
-const { secret } = require('../config');
+import jwt from 'jsonwebtoken';
+import { secret } from '../config/index.js';
 
-function createToken(data) {
+export function createToken(data) {
     return jwt.sign(data, secret, { expiresIn: '1h' });
 }
 
-function verifyToken(token) {
+export function verifyToken(token) {
     const decodedToken = jwt.verify(token, secret);
     return decodedToken;
 }
 
-module.exports = {
+export default {
     createToken,
     verifyToken
 }

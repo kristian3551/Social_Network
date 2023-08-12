@@ -1,11 +1,11 @@
-const isAuth = require('./isAuth');
-const isAdmin = require('./isAdmin');
-const isEndUser = require('./isEndUser');
-const uploader = require('./uploader');
-const isTokenNew = require('./isTokenNew');
-const { isEmailValid, isPasswordValid, isUsernameValid } = require('./validations');
+import isAuth from './isAuth.js';
+import isAdmin from './isAdmin.js';
+import isEndUser from './isEndUser.js';
+import uploader from './uploader.js';
+import isTokenNew from './isTokenNew.js';
+import { isEmailValid, isPasswordValid, isUsernameValid } from './validations.js';
 
-module.exports = {
+export default {
     isAuth,
     isAdmin,
     isEndUser,

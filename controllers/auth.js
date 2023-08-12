@@ -1,64 +1,63 @@
-const bcrypt = require('bcrypt');
-const jwt = require('../utils/jwt');
+import { compare } from 'bcrypt';
+import { createToken } from '../utils/jwt.js';
 
-const UserService = require('../services/UserService');
-const TokenBlacklistService = require('../services/TokenBlacklistService');
+import UserService from '../services/UserService.js';
+import TokenBlacklistService from '../services/TokenBlacklistService.js';
 
-const { 
+import { 
     USER_NOT_FOUND,
-    PASSWORD_INCORRECT,
-    USER_LOGGED_IN,
-    USER_LOGGED_OUT
-} = require('../utils/messages');
+    PASSWORD_INCORRECT, 
+    USER_LOGGED_IN, 
+    USER_LOGGED_OUT } from '../utils/messages.js';
 
-const { authCookieName } = require('../config');
+import { authCookieName } from '../config/index.js';
 
-module.exports = {
-    post: {
-        login: (req, res) => {
-            const { username, password } = req.body;
+export const post = {
+    login: async (req, res) => {
+        const { username, password } = req.body;
 
-            UserService.getByUsername(username)
-                .then(user => {
-                    if(!user) throw {
-                        message: USER_NOT_FOUND
-                    }
+        try {
+            const userData = await UserService.getByUsername(username);
 
-                    return Promise.all([
-                        bcrypt.compare(password, user.toJSON().password),
-                        user.toJSON()
-                    ]);
-                })
-                .then(([match, user]) => {
-                    if(!match) throw {
-                            message: PASSWORD_INCORRECT
-                        }
+            if(!userData) throw {
+                status: 404,
+                message: USER_NOT_FOUND
+            };
 
-                    const token = jwt.createToken({
-                        id: user.id,
-                        role: user.role
-                    });
+            const user = userData.toJSON();
 
-                    res.cookie(authCookieName, token).status(200).json({
-                        message: USER_LOGGED_IN
-                    });
-                })
-                .catch(err => {
-                    res.status(401).send(err);
-                });
-        },
-        logout: (req, res) => {
-            const token = req.cookies[authCookieName];
+            const match = await compare(password, user.password);
 
-            TokenBlacklistService.addToken(token)
-                .then(() => {
-                    res.clearCookie(authCookieName).status(200).json({
-                        message: USER_LOGGED_OUT
-                    });
-                })
-                .catch(err => {
-                    res.status(500).send(err);
-                });
+            if(!match) throw {
+                status: 400,
+                message: PASSWORD_INCORRECT
+            };
+
+            const token = createToken({
+                id: user.id,
+                role: user.role
+            });
+
+            res.cookie(authCookieName, token).status(200).json({
+                message: USER_LOGGED_IN
+            });
+        }
+        catch(err) {
+            res.status(err.status || 401).send(err);
+        }
+    },
+    logout: async (req, res) => {
+        const token = req.cookies[authCookieName];
+
+        try {
+            await TokenBlacklistService.addToken(token);
+
+            res.clearCookie(authCookieName).status(200).json({
+                message: USER_LOGGED_OUT
+            });
+        }
+        catch(err) {
+            res.status(500).send(err);
         }
     }
-}
+};

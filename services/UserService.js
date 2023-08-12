@@ -1,5 +1,5 @@
-const { User, Friendship } = require('../db');
-const { Op } = require('sequelize');
+import { User, Friendship } from '../db.js';
+import { Op } from 'sequelize';
 
 const MAX_PER_PAGE = 5;
 
@@ -75,4 +75,4 @@ class UserService {
     }
 }
 
-module.exports = UserService;
+export default UserService;

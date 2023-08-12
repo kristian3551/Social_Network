@@ -1,5 +1,5 @@
-const { Friendship } = require('../db');
-const { Op } = require("sequelize");
+import { Friendship } from '../db.js';
+import { Op } from "sequelize";
 
 class FriendshipService {
     static findAllFriendshipsForUsers(listOfUsernames) {
@@ -62,4 +62,4 @@ class FriendshipService {
     }
 }
 
-module.exports = FriendshipService;
+export default FriendshipService;

@@ -1,4 +1,4 @@
-const { TokenBlacklist } = require('../db');
+import { TokenBlacklist } from '../db.js';
 
 class TokenBlacklistService {
     static addToken(token) {
@@ -10,4 +10,4 @@ class TokenBlacklistService {
     }
 }
 
-module.exports = TokenBlacklistService;
+export default TokenBlacklistService;

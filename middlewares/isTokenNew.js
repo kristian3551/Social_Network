@@ -1,23 +1,27 @@
-const { USER_NOT_LOGGED } = require('../utils/messages');
-const { authCookieName } = require('../config');
-const TokenBlacklistService = require('../services/TokenBlacklistService');
+import { USER_NOT_LOGGED } from '../utils/messages.js';
+import { authCookieName } from '../config/index.js';
+import TokenBlacklistService from '../services/TokenBlacklistService.js';
 
-module.exports = (req, res, next) => {
+export default async (req, res, next) => {
     const token = req.cookies[authCookieName];
 
     if(!token) {
-        res.status(401).send(USER_NOT_LOGGED);
+        res.status(401).send({
+            message: USER_NOT_LOGGED
+        });
         return;
     }
 
-    TokenBlacklistService.find(token)
-        .then(data => {
-            if(!data) next();
-            else {
-                res.status(401).send(USER_NOT_LOGGED);
-            }
-        })
-        .catch(err => {
-            res.status(500).send(err);
-        });
+    try {
+        const data = await TokenBlacklistService.find(token);
+        if(!data) next();
+        else {
+            res.status(401).send({
+                message: USER_NOT_LOGGED
+            });
+        }
+    }
+    catch(err) {
+        res.status(500).send(err);
+    }
 }
